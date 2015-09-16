@@ -1,0 +1,58 @@
+# Base config for Laravel App
+
+server {
+
+    listen          8000;
+    server_name     base.dev;
+    index           index.php;
+    root            /public/base;
+
+    access_log      /var/log/nginx/base_access.log;
+    error_log       /var/log/nginx/base_error.log;
+    rewrite_log     on;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    if (!-d $request_filename) {
+        rewrite     ^/(.+)/$ /$1 permanent;
+    }
+
+    location ~* \.php$ {
+
+        try_files $uri /index.php =404;
+        fastcgi_split_path_info     ^(.+\.php)(.*)$;
+        fastcgi_pass                unix:/var/run/php5-fpm.sock;
+        fastcgi_index               index.php;
+        include                     /etc/nginx/fastcgi_params;
+        fastcgi_intercept_errors    on;
+        fastcgi_read_timeout        1200;
+        fastcgi_param               SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
+        expires         max;
+        add_header      Cache-Control public;
+        access_log      off;
+    }
+
+    location = /favicon.ico {
+        log_not_found   off;
+        access_log      off;
+    }
+
+    location = /robots.txt {
+        allow           all;
+        log_not_found   off;
+        access_log      off;
+    }
+
+    location ~* /(?:uploads|files)/.*\.php$ {
+        deny            all;
+    }
+
+    location ~ /\.ht {
+        deny            all;
+    }
+}
